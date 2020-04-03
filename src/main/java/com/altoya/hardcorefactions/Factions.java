@@ -11,6 +11,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,31 +34,19 @@ public class Factions implements CommandExecutor {
 
                     if(!file.exists()){
                         try{
-                            groupData.createSection("name");
-                            groupData.set("name", factionName);
+                            groupData.createSection("faction");
 
-                            groupData.createSection("players");
                             List<Object> players = new ArrayList<>();
                             players.add(playerName);
-                            groupData.set("players", players);
+                            groupData.set("faction.players", players);
 
-                            groupData.createSection("leader");
-                            groupData.set("leader", playerName);
-
-                            groupData.createSection("balance");
-                            groupData.set("balance", 0);
-
-                            groupData.createSection("raidable");
-                            groupData.set("raidable",false);
-
-                            groupData.createSection("allies");
-                            groupData.set("allies", null);
-
-                            groupData.createSection("onlinePlayers");
-                            groupData.set("onlinePlayers", null);
-
-                            groupData.createSection("offlinePlayers");
-                            groupData.set("offlinePlayers", null);
+                            groupData.set("faction.name", factionName);
+                            groupData.set("faction.leader", playerName);
+                            groupData.set("faction.balance", 0);
+                            groupData.set("faction.raidable",false);
+                            groupData.set("faction.allies", null);
+                            groupData.set("faction.onlinePlayers", null);
+                            groupData.set("faction.offlinePlayers", null);
 
                             groupData.save(file);
 
@@ -65,6 +54,19 @@ public class Factions implements CommandExecutor {
                             e.printStackTrace();
                         }
 
+                    }
+
+                    File userdata = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder() , File.separator + "PlayerDatabase");
+                    File tempFile = new File(userdata, File.separator + playerName + ".yml");
+                    FileConfiguration playerData = YamlConfiguration.loadConfiguration(tempFile);
+
+                    playerData.set("faction.hasFaction", true);
+                    playerData.set("faction.factionName", factionName);
+                    playerData.set("faction.isLeader", true);
+                    try {
+                        playerData.save(tempFile);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -75,6 +77,22 @@ public class Factions implements CommandExecutor {
                 sender.sendMessage(ChatColor.BLUE + playerChunkString);
                 System.out.println(playerChunkString);
 
+            }
+            if(args[0].equalsIgnoreCase("disband")){
+                String playerName = sender.getName();
+                File userdata = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder() , File.separator + "PlayerDatabase");
+                File tempFile = new File(userdata, File.separator + playerName + ".yml");
+                FileConfiguration playerData = YamlConfiguration.loadConfiguration(tempFile);
+
+                String factionName = (String) playerData.get("faction.factionName");
+                boolean factionLeader = (boolean) playerData.get("faction.isLeader");
+                if(factionLeader == true){
+                    String ymlFileName = factionName + ".yml";
+                    File factionData = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + ymlFileName);
+                    File file = new File(factionData, File.separator + factionName + ".yml");
+                    FileConfiguration groupData = YamlConfiguration.loadConfiguration(file);
+                    file.delete();
+                }
             }
         }
         return true;
