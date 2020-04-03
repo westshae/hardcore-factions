@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="HardcoreFactions:jar">
+    <output-path>$PROJECT_DIR$/../../../../Paper/plugins</output-path>
+    <root id="archive" name="HardcoreFactions.jar">
+      <element id="module-output" name="HardcoreFactions" />
+    </root>
+  </artifact>
+</component>

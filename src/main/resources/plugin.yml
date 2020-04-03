@@ -1,0 +1,9 @@
+name: HardcoreFactions
+version: ${project.version}
+main: com.altoya.hardcorefactions.Main
+api-version: 1.13
+
+commands:
+  f:
+    description: Factions general command
+    usage: /f
