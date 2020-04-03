@@ -11,6 +11,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Factions implements CommandExecutor {
     @Override
@@ -35,7 +37,9 @@ public class Factions implements CommandExecutor {
                             groupData.set("name", factionName);
 
                             groupData.createSection("players");
-                            groupData.set("players", playerName);
+                            List<Object> players = new ArrayList<>();
+                            players.add(playerName);
+                            groupData.set("players", players);
 
                             groupData.createSection("leader");
                             groupData.set("leader", playerName);
