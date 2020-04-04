@@ -10,6 +10,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
+import javax.print.DocFlavor;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,77 +26,145 @@ public class Factions implements CommandExecutor {
                     return false;
                 }
                 if(!args[1].isEmpty()){
+                    //Initialize both variables
                     String factionName = args[1];
                     String playerName = sender.getName();
-                    String ymlFileName = (factionName + ".yml");
-                    File factionData = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + ymlFileName);
-                    File file = new File(factionData, File.separator + factionName + ".yml");
-                    FileConfiguration groupData = YamlConfiguration.loadConfiguration(file);
 
-                    if(!file.exists()){
+                    //Creates or loads the faction's
+                    File fileFaction = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + factionName + ".yml");
+                    FileConfiguration factionData = YamlConfiguration.loadConfiguration(fileFaction);
+
+                    //Loads the player's data .yml file
+                    File filePlayer = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder(), File.separator + playerName + ".yml");
+                    FileConfiguration playerData = YamlConfiguration.loadConfiguration(filePlayer);
+
+
+                    boolean hasFaction = (boolean) playerData.get("faction.hasFaction");
+                    if(hasFaction == true){
+                        sender.sendMessage(ChatColor.RED + "You already have a faction. Disband or leave the faction to create a new one.");
+                        return false;
+                    }
+
+                    //Checks if the user already has a faction
+                    if(fileFaction.exists()){
+                        sender.sendMessage(ChatColor.RED + "A faction with this name already exists. Please choose another name.");
+                        return false;
+                    }
+
+                    //If the faction does not exist and the player is not in a faction, a new faction.yml file will be made.
+                    if(!fileFaction.exists()){
                         try{
-                            groupData.createSection("faction");
+                            //Creates a new section in the .yml file and adds all of the following information, then saves the information.
+                            factionData.createSection("faction");
 
                             List<Object> players = new ArrayList<>();
                             players.add(playerName);
-                            groupData.set("faction.players", players);
+                            factionData.set("faction.players", players);
 
-                            groupData.set("faction.name", factionName);
-                            groupData.set("faction.leader", playerName);
-                            groupData.set("faction.balance", 0);
-                            groupData.set("faction.raidable",false);
-                            groupData.set("faction.allies", null);
-                            groupData.set("faction.onlinePlayers", null);
-                            groupData.set("faction.offlinePlayers", null);
+                            List<Object> invited = new ArrayList<>();
+                            factionData.set("faction.invited", invited);
 
-                            groupData.save(file);
+                            factionData.set("faction.name", factionName);
+                            factionData.set("faction.leader", playerName);
+                            factionData.set("faction.balance", 0);
+                            factionData.set("faction.raidable",false);
+
+                            factionData.save(fileFaction);
 
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-
                     }
 
-                    File userdata = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder() , File.separator + "PlayerDatabase");
-                    File tempFile = new File(userdata, File.separator + playerName + ".yml");
-                    FileConfiguration playerData = YamlConfiguration.loadConfiguration(tempFile);
-
-                    playerData.set("faction.hasFaction", true);
-                    playerData.set("faction.factionName", factionName);
-                    playerData.set("faction.isLeader", true);
                     try {
-                        playerData.save(tempFile);
+                        //Updates the sender's data .yml file with the following information.
+                        playerData.set("faction.hasFaction", true);
+                        playerData.set("faction.factionName", factionName);
+                        playerData.set("faction.isLeader", true);
+
+                        playerData.save(filePlayer);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
-            if(args[0].equalsIgnoreCase("claim")){
-                Player player = (Player) sender;
-                Chunk playerChunk = player.getLocation().getChunk();
-                String playerChunkString = playerChunk.toString();
-                sender.sendMessage(ChatColor.BLUE + playerChunkString);
-                System.out.println(playerChunkString);
-
-            }
             if(args[0].equalsIgnoreCase("disband")){
                 String playerName = sender.getName();
-                File userdata = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder() , File.separator + "PlayerDatabase");
-                File tempFile = new File(userdata, File.separator + playerName + ".yml");
-                FileConfiguration playerData = YamlConfiguration.loadConfiguration(tempFile);
+                File filePlayer = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder(), File.separator + playerName + ".yml");
+                FileConfiguration playerData = YamlConfiguration.loadConfiguration(filePlayer);
 
                 String factionName = (String) playerData.get("faction.factionName");
                 boolean factionLeader = (boolean) playerData.get("faction.isLeader");
                 if(factionLeader == true){
-                    String ymlFileName = factionName + ".yml";
-                    File factionData = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + ymlFileName);
-                    File file = new File(factionData, File.separator + factionName + ".yml");
-                    FileConfiguration groupData = YamlConfiguration.loadConfiguration(file);
-                    file.delete();
+                    File fileFaction = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + factionName + ".yml");
+                    fileFaction.delete();
+                }
+            }
+            if(args[0].equalsIgnoreCase("invite")){
+                //Checks to see if they have included the name of the player
+                try{
+                    Object tryCatchTest = args[1];
+                    System.out.println(tryCatchTest);
+
+                }catch(Exception e){
+                    e.printStackTrace();
+                    sender.sendMessage(ChatColor.RED + "Please use /f invite <name>");
+                    return false;
+                }
+
+                String playerName = sender.getName();
+                String inviteeName = args[1];
+
+                File filePlayer = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder(), File.separator + playerName + ".yml");
+                FileConfiguration playerData = YamlConfiguration.loadConfiguration(filePlayer);
+
+                String factionName = (String) playerData.get("faction.factionName");
+
+                File fileFaction = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + factionName + ".yml");
+                FileConfiguration factionData = YamlConfiguration.loadConfiguration(fileFaction);
+
+                boolean isLeader = (boolean) playerData.get("faction.isLeader");
+                if(isLeader == true){
+                    try {
+                        List<Object> invited = (List<Object>) factionData.getList("faction.invited");
+                        invited.add(inviteeName);
+
+                        factionData.save(fileFaction);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if(args[0].equalsIgnoreCase("join")){
+                try{
+                    Object tryCatchTest = args[1];
+                    System.out.println(tryCatchTest);
+
+                }catch(Exception e){
+                    e.printStackTrace();
+                    sender.sendMessage(ChatColor.RED + "Please use /f join <factionname>");
+                    return false;
+                }
+
+                String playerName = sender.getName();
+                String factionName = args[1];
+
+                File fileFaction = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + factionName + ".yml");
+                FileConfiguration factionData = YamlConfiguration.loadConfiguration(fileFaction);
+
+                List<Object> invitedPlayers = (List<Object>) factionData.get("faction.invited");
+                if(invitedPlayers.contains(playerName)){
+                    try {
+                        List<Object> players = (List<Object>) factionData.get("faction.players");
+                        players.add(playerName);
+
+                        factionData.save(fileFaction);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
         return true;
     }
-
 }

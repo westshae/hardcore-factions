@@ -6,4 +6,4 @@ api-version: 1.13
 commands:
   f:
     description: Factions general command
-    usage: /f
+    usage: /f <Required> <Subcommand Dependant>
