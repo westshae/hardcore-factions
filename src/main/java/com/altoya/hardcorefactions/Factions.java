@@ -10,7 +10,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import javax.print.DocFlavor;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,6 +63,10 @@ public class Factions implements CommandExecutor {
                             List<Object> invited = new ArrayList<>();
                             factionData.set("faction.invited", invited);
 
+                            List<Object> claims = new ArrayList<>();
+                            factionData.set("faction.claims", claims);
+
+
                             factionData.set("faction.name", factionName);
                             factionData.set("faction.leader", playerName);
                             factionData.set("faction.balance", 0);
@@ -86,6 +89,7 @@ public class Factions implements CommandExecutor {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    sender.sendMessage(ChatColor.GREEN + "The faction " + factionName + " has been created.");
                 }
             }
             if(args[0].equalsIgnoreCase("disband")){
@@ -97,6 +101,49 @@ public class Factions implements CommandExecutor {
                 boolean factionLeader = (boolean) playerData.get("faction.isLeader");
                 if(factionLeader == true){
                     File fileFaction = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + factionName + ".yml");
+                    FileConfiguration factionData = YamlConfiguration.loadConfiguration(fileFaction);
+
+                    List<String> players = factionData.getStringList("faction.players");
+
+                    for(int i = 0; i < players.size(); i++){
+                        String playerString = players.get(i);
+
+                        File filePlayerTemp = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder(), File.separator + playerString + ".yml");
+                        FileConfiguration playerDataTemp = YamlConfiguration.loadConfiguration(filePlayerTemp);
+
+                        playerDataTemp.set("faction.hasFaction", false);
+                        playerDataTemp.set("faction.isLeader", false);
+                        playerDataTemp.set("faction.factionName", null);
+
+                        Player player = Bukkit.getPlayer(playerString);
+                        player.sendMessage(ChatColor.GREEN + "Your faction has been disbanded by " + sender.getName() + ".");
+                    }
+                    try {
+                        playerData.set("faction.hasFaction", false);
+                        playerData.set("faction.isLeader", false);
+                        playerData.set("faction.factionName", null);
+
+                        playerData.save(filePlayer);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    List<String> claims = factionData.getStringList("faction.claims");
+
+                    File folder = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + "Claims");
+                    File fileClaim = new File(folder, File.separator +  "claim.yml");
+                    FileConfiguration claimData = YamlConfiguration.loadConfiguration(fileClaim);
+
+                    for(int I = 0; I < claims.size(); I++){
+                        try {
+                            String chunkString = claims.get(I);
+                            claimData.set(chunkString, null);
+
+                            claimData.save(fileClaim);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                     fileFaction.delete();
                 }
             }
@@ -104,7 +151,6 @@ public class Factions implements CommandExecutor {
                 //Checks to see if they have included the name of the player
                 try{
                     Object tryCatchTest = args[1];
-                    System.out.println(tryCatchTest);
 
                 }catch(Exception e){
                     e.printStackTrace();
@@ -130,6 +176,10 @@ public class Factions implements CommandExecutor {
                         invited.add(inviteeName);
 
                         factionData.save(fileFaction);
+
+                        sender.sendMessage(ChatColor.GREEN + "The player " + inviteeName + " has been invited to " + factionName + ".");
+                        Player invitee = Bukkit.getServer().getPlayer(inviteeName);
+                        invitee.sendMessage(ChatColor.GREEN + "You have been invited to " + factionName + ".");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -138,7 +188,6 @@ public class Factions implements CommandExecutor {
             if(args[0].equalsIgnoreCase("join")){
                 try{
                     Object tryCatchTest = args[1];
-                    System.out.println(tryCatchTest);
 
                 }catch(Exception e){
                     e.printStackTrace();
@@ -158,9 +207,78 @@ public class Factions implements CommandExecutor {
                         List<Object> players = (List<Object>) factionData.get("faction.players");
                         players.add(playerName);
 
+                        List<Object> invited = (List<Object>) factionData.getList("faction.invited");
+                        invited.remove(playerName);
+
                         factionData.save(fileFaction);
                     } catch (IOException e) {
                         e.printStackTrace();
+                    }
+                    sender.sendMessage(ChatColor.GREEN + "You have joined the faction, " + factionName + ".");
+                    List<String> players = factionData.getStringList("faction.players");
+                    for(int i = 0; i < players.size(); i++){
+                        String currentPlayerString = players.get(i);
+                        Player currentPlayer = Bukkit.getServer().getPlayer(currentPlayerString);
+                        if(currentPlayer.isOnline()){
+                            currentPlayer.sendMessage(ChatColor.GREEN + "The player " + playerName + " has joined the faction.");
+                        }
+                    }
+                }
+            }
+            if(args[0].equalsIgnoreCase("claim")){
+                String playerName = sender.getName();
+                Player player = (Player) sender;
+
+
+                File filePlayer = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder(), File.separator + playerName + ".yml");
+                FileConfiguration playerData = YamlConfiguration.loadConfiguration(filePlayer);
+
+                String factionName = (String) playerData.get("faction.factionName");
+
+                File folder = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + "Claims");
+                File fileClaim = new File(folder, File.separator +  "claim.yml");
+                FileConfiguration claimData = YamlConfiguration.loadConfiguration(fileClaim);
+
+                File fileFaction = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + factionName + ".yml");
+                FileConfiguration factionData = YamlConfiguration.loadConfiguration(fileFaction);
+
+
+                boolean factionLeader = (boolean) playerData.get("faction.isLeader");
+
+
+                if(factionData.getStringList("faction.players").contains(playerName)){
+                    if(factionLeader == true){
+
+
+                        Chunk playerChunk = player.getLocation().getChunk();
+
+                        String chunkString = playerChunk.toString();
+
+                        if(claimData.contains(chunkString)){
+
+                            sender.sendMessage(ChatColor.RED + "This chunk is already claimed.");
+                            return false;
+                        }
+                        if(!claimData.contains(chunkString)){
+                            try {
+                                claimData.createSection(chunkString + ".claimOwner");
+
+                                String factionFName = (String) factionData.get("faction.name");
+                                claimData.set(chunkString + ".claimOwner", factionFName);
+
+                                claimData.save(fileClaim);
+
+                                List<Object> claims = (List<Object>) factionData.getList("faction.claims");
+                                claims.add(chunkString);
+
+                                factionData.save(fileFaction);
+
+                                sender.sendMessage(ChatColor.GREEN + "This chunk has been claimed by " + factionName + ".");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
                     }
                 }
             }
