@@ -399,12 +399,9 @@ public class Factions implements CommandExecutor {
                         List<String> players = new ArrayList<>();
                         players = factionData.getStringList("faction.players");
 
-                        System.out.println("TESTTESTTEST22222");
-
                         for(int i = 0; i < players.size(); i++){
-                            System.out.println("TESTTESTTEST");
-                            String playerNameTemp = (String) players.get(i);
-                            Player player = (Player) Bukkit.getServer().getPlayer(playerNameTemp);
+                            String playerNameTemp = players.get(i);
+                            Player player = Bukkit.getServer().getPlayer(playerNameTemp);
                             player.sendMessage(ChatColor.GREEN + "The player " + playerNameTemp + " has left the faction.");
                         }
                     } catch (IOException e) {
