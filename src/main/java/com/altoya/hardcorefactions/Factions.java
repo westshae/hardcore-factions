@@ -211,6 +211,14 @@ public class Factions implements CommandExecutor {
                         invited.remove(playerName);
 
                         factionData.save(fileFaction);
+
+                        File filePlayer = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder(), File.separator + playerName + ".yml");
+                        FileConfiguration playerData = YamlConfiguration.loadConfiguration(filePlayer);
+
+                        playerData.set("faction.hasFaction", true);
+                        playerData.set("faction.factionName", factionName);
+
+                        playerData.save(filePlayer);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -350,6 +358,59 @@ public class Factions implements CommandExecutor {
                     e.printStackTrace();
                 }
 
+            }
+            if(args[0].equalsIgnoreCase("leave")){
+                String playerName = sender.getName();
+                File filePlayer = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder(), File.separator + playerName + ".yml");
+                FileConfiguration playerData = YamlConfiguration.loadConfiguration(filePlayer);
+
+                boolean hasFaction = (boolean) playerData.get("faction.hasFaction");
+                String leader = (String) playerData.get("faction.leader");
+                if(playerName.equals(leader)){
+                    sender.sendMessage(ChatColor.RED + "Faction leaders cannot leave their own faction, they must disband.");
+                }
+
+                if(hasFaction == true){
+
+                    String factionName = (String) playerData.get("faction.factionName");
+
+                    File fileFaction = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + factionName + ".yml");
+                    FileConfiguration factionData = YamlConfiguration.loadConfiguration(fileFaction);
+                    try {
+
+                        List<String> players = factionData.getStringList("faction.players");
+                        players.remove(playerName);
+                        factionData.set("faction.players", players);
+
+                        factionData.save(fileFaction);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        playerData.set("faction.hasFaction", false);
+                        playerData.set("faction.isLeader", false);
+                        playerData.set("faction.factionName", null);
+
+                        playerData.save(filePlayer);
+
+                        sender.sendMessage(ChatColor.GREEN + sender.getName() + " has left the faction.");
+
+                        List<String> players = new ArrayList<>();
+                        players = factionData.getStringList("faction.players");
+
+                        System.out.println("TESTTESTTEST22222");
+
+                        for(int i = 0; i < players.size(); i++){
+                            System.out.println("TESTTESTTEST");
+                            String playerNameTemp = (String) players.get(i);
+                            Player player = (Player) Bukkit.getServer().getPlayer(playerNameTemp);
+                            player.sendMessage(ChatColor.GREEN + "The player " + playerNameTemp + " has left the faction.");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
         return true;
