@@ -136,14 +136,9 @@ public class ChunkData implements Listener {
 
     @EventHandler
     public void PlayerInteractEvent(PlayerInteractEvent event){
-        System.out.println("T1");
-
         if(event.getClickedBlock() == null){
-            System.out.println("T2");
             return;
         }
-        System.out.println("T3");
-
         List<Object> protectedBlocks = new ArrayList<>();
         protectedBlocks.add("OAK_FENCE_GATE");
         protectedBlocks.add("SPRUCE_FENCE_GATE");
@@ -165,8 +160,6 @@ public class ChunkData implements Listener {
         protectedBlocks.add("DARK_OAK_DOOR");
         protectedBlocks.add("REPEATER");
         protectedBlocks.add("COMPARATOR");
-        System.out.println("T4");
-
         if(protectedBlocks.contains(event.getClickedBlock().getType().toString())){
             Player player = event.getPlayer();
             String playerName = player.getName();

@@ -282,6 +282,49 @@ public class Factions implements CommandExecutor {
                     }
                 }
             }
+            if(args[0].equalsIgnoreCase("unclaim")){
+                String playerName = sender.getName();
+                Player player = (Player) sender;
+
+                File filePlayer = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder(), File.separator + playerName + ".yml");
+                FileConfiguration playerData = YamlConfiguration.loadConfiguration(filePlayer);
+
+                String factionName = (String) playerData.get("faction.factionName");
+
+                File folder = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + "Claims");
+                File fileClaim = new File(folder, File.separator +  "claim.yml");
+                FileConfiguration claimData = YamlConfiguration.loadConfiguration(fileClaim);
+
+                File fileFaction = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + factionName + ".yml");
+                FileConfiguration factionData = YamlConfiguration.loadConfiguration(fileFaction);
+
+
+                boolean factionLeader = (boolean) playerData.get("faction.isLeader");
+
+                if(factionData.getStringList("faction.players").contains(playerName)) {
+                    if (factionLeader == true) {
+                        Chunk playerChunk = player.getLocation().getChunk();
+                        String chunkString = playerChunk.toString();
+                        String claimOwner = (String) claimData.get(chunkString + ".claimOwner");
+
+                        if (!claimData.contains(chunkString)) {
+                            sender.sendMessage(ChatColor.RED + "This chunk isn't claimed.");
+                            return false;
+                        }
+                        if(claimOwner.equals(factionName)){
+                            try {
+                                claimData.set(chunkString, null);
+
+                                claimData.save(fileClaim);
+
+                                sender.sendMessage(ChatColor.GREEN + "This chunk has been unclaimed.");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
         }
         return true;
     }
