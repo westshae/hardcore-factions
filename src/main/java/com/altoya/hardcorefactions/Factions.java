@@ -325,6 +325,32 @@ public class Factions implements CommandExecutor {
                     }
                 }
             }
+            if(args[0].equalsIgnoreCase("uninvite")){
+                String playerName = sender.getName();
+                Player player = (Player) sender;
+                String invitee = args[1].toString();
+
+
+                File filePlayer = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder(), File.separator + playerName + ".yml");
+                FileConfiguration playerData = YamlConfiguration.loadConfiguration(filePlayer);
+
+                String factionName = (String) playerData.get("faction.factionName");
+
+                File fileFaction = new File(Bukkit.getServer().getPluginManager().getPlugin("HardcoreFactions").getDataFolder(), File.separator + factionName + ".yml");
+                FileConfiguration factionData = YamlConfiguration.loadConfiguration(fileFaction);
+
+                List<Object> invited = (List<Object>) factionData.getList("faction.invited");
+                invited.remove(invitee);
+
+                try {
+                    factionData.set("faction.invited", invited);
+
+                    factionData.save(fileFaction);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
         }
         return true;
     }
