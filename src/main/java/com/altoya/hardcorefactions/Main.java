@@ -9,6 +9,7 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         this.getCommand("f").setExecutor(new Factions());
         this.getServer().getPluginManager().registerEvents(new ChunkData(), this);
+        this.getServer().getPluginManager().registerEvents(new Chat(), this);
     }
 
     @Override

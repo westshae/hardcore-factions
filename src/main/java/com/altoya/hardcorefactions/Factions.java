@@ -66,6 +66,13 @@ public class Factions implements CommandExecutor {
                             List<Object> claims = new ArrayList<>();
                             factionData.set("faction.claims", claims);
 
+                            List<Object> onlinePlayers = new ArrayList<>();
+                            onlinePlayers.add(playerName);
+                            factionData.set("faction.onlinePlayers", onlinePlayers);
+
+                            List<Object> offlinePlayers = new ArrayList<>();
+                            factionData.set("faction.offlinePlayers", offlinePlayers);
+
 
                             factionData.set("faction.name", factionName);
                             factionData.set("faction.leader", playerName);
@@ -406,6 +413,60 @@ public class Factions implements CommandExecutor {
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
+                    }
+                }
+            }
+            if(args[0].equalsIgnoreCase("chat")){
+                Player player = (Player) sender;
+                String playerName = player.getName();
+
+                File filePlayer = new File(Bukkit.getServer().getPluginManager().getPlugin("PlayerData").getDataFolder(), File.separator + playerName + ".yml");
+                FileConfiguration playerData = YamlConfiguration.loadConfiguration(filePlayer);
+                boolean argsEmpty = false;
+                try{
+                    args[1].toString();
+                }catch(Exception e){
+                    argsEmpty = true;
+                }
+                if((boolean)playerData.get("faction.hasFaction") == true) {
+                    if (argsEmpty == true) {
+                        if ((boolean) playerData.get("faction.chat") == true) {
+                            try {
+                                playerData.set("faction.chat", false);
+
+                                playerData.save(filePlayer);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else if ((boolean) playerData.get("faction.chat") == false) {
+                            try {
+                                playerData.set("faction.chat", true);
+
+                                playerData.save(filePlayer);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                    if (argsEmpty == false) {
+                        if (args[1].equalsIgnoreCase("on")) {
+                            try {
+                                playerData.set("faction.chat", true);
+
+                                playerData.save(filePlayer);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if (args[1].equalsIgnoreCase("off")) {
+                            try {
+                                playerData.set("faction.chat", false);
+
+                                playerData.save(filePlayer);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                 }
             }
